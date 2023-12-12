@@ -22,53 +22,33 @@ static_assert(0, "CM:w:cm_svm.h should not be included explicitly - only "
 template <typename T0, int N>
 CM_NODEBUG CM_INLINE void cm_svm_scatter_read(vector<svmptr_t, N> vAddr,
                                               vector_ref<T0, N> dst) {
-  if constexpr (N == 1) {
-    __global T0 *ptr = reinterpret_cast<__global T0 *>(vAddr(0));
-    dst(0) = load(ptr);
-  } else {
-    vector<__global T0 *, N> vPtrs =
-        reinterpret_cast<vector<__global T0 *, N> >(vAddr);
-    dst = gather(vPtrs);
-  }
+  vector<__global T0 *, N> vPtrs =
+      reinterpret_cast<vector<__global T0 *, N> >(vAddr);
+  dst = gather(vPtrs);
 }
 
 template <typename T0, int N, int M>
 CM_NODEBUG CM_INLINE void cm_svm_scatter_read(matrix<svmptr_t, N, M> vAddr,
                                               matrix_ref<T0, N, M> dst) {
-  if constexpr ((N == 1) && (M == 1)) {
-    __global T0 *ptr = reinterpret_cast<__global T0 *>(vAddr(0, 0));
-    dst(0, 0) = load(ptr);
-  } else {
-    matrix<__global T0 *, N, M> vPtrs =
-        reinterpret_cast<matrix<__global T0 *, N, M> >(vAddr);
-    dst = gather(vPtrs);
-  }
+  matrix<__global T0 *, N, M> vPtrs =
+      reinterpret_cast<matrix<__global T0 *, N, M> >(vAddr);
+  dst = gather(vPtrs);
 }
 
 template <typename T0, int N>
 CM_NODEBUG CM_INLINE void cm_svm_scatter_write(vector<svmptr_t, N> vAddr,
                                                vector<T0, N> src) {
-  if constexpr (N == 1) {
-    __global T0 *ptr = reinterpret_cast<__global T0 *>(vAddr(0));
-    store(src(0), ptr);
-  } else {
-    vector<__global T0 *, N> vPtrs =
-        reinterpret_cast<vector<__global T0 *, N> >(vAddr);
-    scatter(src, vPtrs);
-  }
+  vector<__global T0 *, N> vPtrs =
+      reinterpret_cast<vector<__global T0 *, N> >(vAddr);
+  scatter(src, vPtrs);
 }
 
 template <typename T0, int N, int M>
 CM_NODEBUG CM_INLINE void cm_svm_scatter_write(matrix<svmptr_t, N, M> vAddr,
                                                matrix<T0, N, M> src) {
-  if constexpr ((N == 1) && (M == 1)) {
-    __global T0 *ptr = reinterpret_cast<__global T0 *>(vAddr(0, 0));
-    store(src(0, 0), ptr);
-  } else {
-    matrix<__global T0 *, N, M> vPtrs =
-        reinterpret_cast<matrix<__global T0 *, N, M> >(vAddr);
-    scatter(src, vPtrs);
-  }
+  matrix<__global T0 *, N, M> vPtrs =
+      reinterpret_cast<matrix<__global T0 *, N, M> >(vAddr);
+  scatter(src, vPtrs);
 }
 
 // API for SVM block read and write.

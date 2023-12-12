@@ -91,21 +91,30 @@ T __cm_builtin_impl_load(__constant const T *const ptr);
 } // namespace details
 
 // ____________________________ Scatter API ________________________________
-#define _CM_SCATTER_WITH_AS_DEFS(_AS)                                       \
-  template <typename T, int N, int A = Align::ELEM_SIZE>                    \
-  CM_NODEBUG CM_INLINE typename std::enable_if<N != 1>::type                \
-  scatter(vector<T, N> src, vector<_AS T *, N> ptrs,                        \
-          vector<ushort, N> mask = 1) {                                     \
-    details::__cm_builtin_impl_scatter<T, N, A>(src, ptrs, mask);           \
-  }                                                                         \
-  template <typename T, int N, int M, int A = Align::ELEM_SIZE>             \
-  CM_NODEBUG CM_INLINE typename std::enable_if<(N != 1) || (M != 1)>::type  \
-  scatter(matrix<T, N, M> src, matrix<_AS T *, N, M> ptrs,                  \
-          matrix<ushort, N, M> mask = 1) {                                  \
-    vector<T, N * M> vSrc = src;                                             \
-    vector<_AS T *, N * M> vPtrs = ptrs;                                     \
-    vector<ushort, N * M> vMask = mask;                                      \
-    details::__cm_builtin_impl_scatter<T, N * M, A>(vSrc, vPtrs, vMask);    \
+#define _CM_SCATTER_WITH_AS_DEFS(_AS)                                          \
+  template <typename T, int N, int A = Align::ELEM_SIZE>                       \
+  CM_NODEBUG CM_INLINE void scatter(vector<T, N> src, vector<_AS T *, N> ptrs, \
+                                    vector<ushort, N> mask = 1) {              \
+    if constexpr (N == 1) {                                                    \
+      if (mask(0))                                                             \
+        details::__cm_builtin_impl_store<T, A>(src(0), ptrs(0));               \
+    } else                                                                     \
+      details::__cm_builtin_impl_scatter<T, N, A>(src, ptrs, mask);            \
+  }                                                                            \
+  template <typename T, int N, int M, int A = Align::ELEM_SIZE>                \
+  CM_NODEBUG CM_INLINE void scatter(matrix<T, N, M> src,                       \
+                                    matrix<_AS T *, N, M> ptrs,                \
+                                    matrix<ushort, N, M> mask = 1) {           \
+    constexpr unsigned VS = N * M;                                             \
+    if constexpr (VS == 1) {                                                   \
+      if (mask(0, 0))                                                          \
+        details::__cm_builtin_impl_store<T, A>(src(0, 0), ptrs(0, 0));         \
+    } else {                                                                   \
+      vector<T, VS> vSrc = src;                                                \
+      vector<_AS T *, VS> vPtrs = ptrs;                                        \
+      vector<ushort, VS> vMask = mask;                                         \
+      details::__cm_builtin_impl_scatter<T, VS, A>(vSrc, vPtrs, vMask);        \
+    }                                                                          \
   }
 
 _CM_SCATTER_WITH_AS_DEFS()
@@ -118,39 +127,61 @@ _CM_SCATTER_WITH_AS_DEFS(__generic)
 // ________________________________ Gather API ________________________________
 #define _CM_GATHER_WITH_AS_DEFS(_AS)                                           \
   template <typename T, int N, int A = Align::ELEM_SIZE>                       \
-  CM_NODEBUG CM_INLINE typename std::enable_if<N != 1, vector<T, N> >::type    \
-  gather(vector<_AS T *, N> ptrs, vector<ushort, N> mask = 1) {                \
+  CM_NODEBUG CM_INLINE vector<T, N> gather(vector<_AS T *, N> ptrs,            \
+                                           vector<ushort, N> mask = 1) {       \
     vector<T, N> passthru;                                                     \
-    return details::__cm_builtin_impl_gather<T, N, A>(ptrs, mask, passthru);   \
+    if constexpr (N == 1) {                                                    \
+      if (mask(0))                                                             \
+        return details::__cm_builtin_impl_load<T, A>(ptrs(0));                 \
+      return passthru;                                                         \
+    } else                                                                     \
+      return details::__cm_builtin_impl_gather<T, N, A>(ptrs, mask, passthru); \
   }                                                                            \
   template <typename T, int N, int A = Align::ELEM_SIZE>                       \
-  CM_NODEBUG CM_INLINE typename std::enable_if<N != 1, vector<T, N> >::type    \
-  gather(vector<_AS T *, N> ptrs, vector<ushort, N> mask,                      \
-         vector<T, N> passthru) {                                              \
-    return details::__cm_builtin_impl_gather<T, N, A>(ptrs, mask, passthru);   \
+  CM_NODEBUG CM_INLINE vector<T, N> gather(vector<_AS T *, N> ptrs,            \
+                                           vector<ushort, N> mask,             \
+                                           vector<T, N> passthru) {            \
+    if constexpr (N == 1) {                                                    \
+      if (mask(0))                                                             \
+        return details::__cm_builtin_impl_load<T, A>(ptrs(0));                 \
+      return passthru;                                                         \
+    } else                                                                     \
+      return details::__cm_builtin_impl_gather<T, N, A>(ptrs, mask, passthru); \
   }                                                                            \
   template <typename T, int N, int M, int A = Align::ELEM_SIZE>                \
-  CM_NODEBUG CM_INLINE                                                         \
-      typename std::enable_if<(N != 1) || (M != 1), matrix<T, N, M> >::type    \
-  gather(matrix<_AS T *, N, M> ptrs, matrix<ushort, N, M> mask = 1) {          \
-    vector<_AS T *, N * M> vPtrs = ptrs;                                       \
-    vector<ushort, N * M> vMask = mask;                                        \
-    vector<T, N * M> vPassthru;                                                \
-    return details::__cm_builtin_impl_gather<T, N * M, A>(vPtrs, vMask,        \
-                                                          vPassthru)           \
-        .format<T, N, M>();                                                    \
+  CM_NODEBUG CM_INLINE matrix<T, N, M> gather(matrix<_AS T *, N, M> ptrs,      \
+                                              matrix<ushort, N, M> mask = 1) { \
+    constexpr unsigned VS = N * M;                                             \
+    vector<T, VS> vPassthru;                                                   \
+    if constexpr (VS == 1) {                                                   \
+      if (mask(0, 0))                                                          \
+        return details::__cm_builtin_impl_load<T, A>(ptrs(0, 0));              \
+      return vPassthru.format<T, N, M>();                                      \
+    } else {                                                                   \
+      vector<_AS T *, VS> vPtrs = ptrs;                                        \
+      vector<ushort, VS> vMask = mask;                                         \
+      return details::__cm_builtin_impl_gather<T, VS, A>(vPtrs, vMask,         \
+                                                         vPassthru)            \
+          .format<T, N, M>();                                                  \
+    }                                                                          \
   }                                                                            \
   template <typename T, int N, int M, int A = Align::ELEM_SIZE>                \
-  CM_NODEBUG CM_INLINE                                                         \
-      typename std::enable_if<(N != 1) || (M != 1), matrix<T, N, M> >::type    \ 
+  CM_NODEBUG CM_INLINE matrix<T, N, M>                                         \ 
   gather(matrix<_AS T *, N, M> ptrs, matrix<ushort, N, M> mask,                \
          matrix<T, N, M> passthru) {                                           \
-    vector<_AS T *, N * M> vPtrs = ptrs;                                       \
-    vector<ushort, N * M> vMask = mask;                                        \
-    vector<T, N * M> vPassthru = passthru;                                     \
-    return details::__cm_builtin_impl_gather<T, N * M, A>(vPtrs, vMask,        \
-                                                          vPassthru)           \
-        .format<T, N, M>();                                                    \
+    constexpr unsigned VS = N * M;                                             \
+    if constexpr (VS == 1) {                                                   \
+      if (mask(0, 0))                                                          \
+        return details::__cm_builtin_impl_load<T, A>(ptrs(0, 0));              \
+      return passthru;                                                         \
+    } else {                                                                   \
+      vector<_AS T *, VS> vPtrs = ptrs;                                        \
+      vector<ushort, VS> vMask = mask;                                         \
+      vector<T, VS> vPassthru = passthru;                                      \
+      return details::__cm_builtin_impl_gather<T, VS, A>(vPtrs, vMask,         \
+                                                         vPassthru)            \
+          .format<T, N, M>();                                                  \
+    }                                                                          \
   }
 
 _CM_GATHER_WITH_AS_DEFS()

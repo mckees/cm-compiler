@@ -88,14 +88,9 @@ template <typename T, int N>
 CM_NODEBUG CM_INLINE void cm_slm_read_scaled(uint slmBuffer,
                                              vector<uint, N> vAddr,
                                              vector_ref<T, N> vDst) {
-  if constexpr (N == 1) {
-    __local T *ptr = reinterpret_cast<__local T *>(slmBuffer + vAddr(0));
-    vDst(0) = load(ptr);
-  } else {
-    vector<__local T *, N> vPtrs =
-        reinterpret_cast<vector<__local T *, N> >(slmBuffer + vAddr);
-    vDst = gather(vPtrs);
-  }
+  vector<__local T *, N> vPtrs =
+      reinterpret_cast<vector<__local T *, N> >(slmBuffer + vAddr);
+  vDst = gather(vPtrs);
 }
 
 // Deprecated gathering read. Offsets are in bytes.
@@ -131,14 +126,9 @@ CM_NODEBUG CM_INLINE void cm_slm_read(uint slmBuffer, vector<ushort, N> vAddr,
 template <typename T, int N>
 CM_NODEBUG CM_INLINE void
 cm_slm_write_scaled(uint slmBuffer, vector<uint, N> vAddr, vector<T, N> vSrc) {
-  if constexpr (N == 1) {
-    __local T *ptr = reinterpret_cast<__local T *>(slmBuffer + vAddr(0));
-    store(vSrc(0), ptr);
-  } else {
-    vector<__local T *, N> vPtrs =
-        reinterpret_cast<vector<__local T *, N> >(slmBuffer + vAddr);
-    scatter(vSrc, vPtrs);
-  }
+  vector<__local T *, N> vPtrs =
+      reinterpret_cast<vector<__local T *, N> >(slmBuffer + vAddr);
+  scatter(vSrc, vPtrs);
 }
 
 // Deprecated scattering write. Offsets are in bytes.
@@ -190,13 +180,12 @@ CM_INLINE void cm_slm_load(uint slmBuffer, svmptr_t addr, uint offset,
 
   for (uint block = 0; block < numBlocks; block++) {
     using _VTy = vector<uint, 64>;
-    _VTy data;
     const __global _VTy *const vSVMPtr =
         reinterpret_cast<const __global _VTy *const>(addr +
                                                      threadOffsetInMemory);
     __local _VTy *const vSLMPtr =
         reinterpret_cast<__local _VTy *const>(slmBuffer + threadOffsetInSLM);
-    data = load<_VTy, Align::OWORD>(vSVMPtr);
+    _VTy data = load<_VTy, Align::OWORD>(vSVMPtr);
     store<_VTy, Align::OWORD>(data, vSLMPtr);
     threadOffsetInMemory += numGroups * 256;
     threadOffsetInSLM += numGroups * 256;

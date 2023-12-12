@@ -801,8 +801,7 @@ llvm::Value *CGCMRuntime::EmitReadRegion1D(CGBuilderTy &Builder,
   llvm::Type *OffsetTy = Offset->getType();
   unsigned OffsetTySize = Ty->getScalarSizeInBits() / 8;
   if (!OffsetTySize) {
-    assert(Ty->getScalarType()->isPointerTy() &&
-           Ty->getScalarType()->getPointerElementType()->isFunctionTy());
+    assert(Ty->getScalarType()->isPointerTy());
     OffsetTySize = DL.getTypeSizeInBits(Ty) / 8;
   }
   llvm::Value *OffsetVal =
