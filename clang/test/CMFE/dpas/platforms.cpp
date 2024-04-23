@@ -38,7 +38,7 @@ auto test_dpasw(vector<src1_t, N1> src1, vector<src2_t, N2> src2) {
 
 // RUN: %cmc -emit-llvm -march=tgllp -- %s 2>&1 | FileCheck --check-prefix NOSUPPORT %s
 // RUN: %cmc -emit-llvm -march=mtl-u -- %s 2>&1 | FileCheck --check-prefix NOSUPPORT %s
-// RUN: %cmc -emit-llvm -march=mtl-p -- %s 2>&1 | FileCheck --check-prefix NOSUPPORT %s
+// RUN: %cmc -emit-llvm -march=mtl-h -- %s 2>&1 | FileCheck --check-prefix NOSUPPORT %s
 // RUN: %cmc -emit-llvm -march=arl-s -- %s 2>&1 | FileCheck --check-prefix NOSUPPORT %s
 // RUN: %cmc -emit-llvm -march=pvc-vg -- %s 2>&1 | FileCheck --check-prefix NOSUPPORT %s
 //
