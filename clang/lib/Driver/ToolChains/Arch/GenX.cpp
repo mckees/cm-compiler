@@ -55,6 +55,7 @@ static uint32_t getGenXTargetCPUId(const std::string &CPU, int RevId) {
                 .Case("arl", "arl-h")
                 .Case("pvcxt", "pvc")
                 .Case("lnl", "lnl-m")
+                .Case("bmg", "bmg-g21")
                 .Default(CPUName);
 
   uint32_t CPUId = GenX::getDeviceId(CPUName);

@@ -84,6 +84,7 @@ XeLPG+    ARL-H    CM_XELPGPLUS 1276          0
 XeHPC     PVC      CM_XEHPC     1280          0
 ...       PVCXT    CM_XEHPC     1280          5
 Xe2LPG    LNL      CM_XE2_LPG   1295          0
+Xe2HPG    BMG      CM_XE2_HPG   1290          0
 ========= ======== ============ ============= ===================
 
 
