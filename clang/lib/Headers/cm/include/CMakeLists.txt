@@ -15,7 +15,6 @@ set(CM_HEADERS
   cm/cm_common.h
   cm/cm_cvt.h
   cm/cm_dataport.h
-  cm/cm_dpas.h
   cm/cm_gateway.h
   cm/cm.h
   cm/cm_internal.h
@@ -62,6 +61,10 @@ set(CM_HEADERS
   cm/cm_memory.h
   cm/cm_slm.h
   cm/cm_pointer.h
+
+  cm/dpas/helpers.h
+  cm/dpas/dpas.h
+  cm/dpas/dpasw.h
 
   # SPIR-V function definitions
   cm/spirv/barrier.h
