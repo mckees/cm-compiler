@@ -51,10 +51,11 @@ template <CacheHint L1, CacheHint L2>
 constexpr bool lsc_check_cache_hint_prefetch() {
   constexpr CacheHintWrap<L1> L1H;
   constexpr CacheHintWrap<L2> L2H;
-  bool Res = L1H.is_one_of<CacheHint::Uncached, CacheHint::Cached,
-                           CacheHint::Streaming>() &&
-             L2H.is_one_of<CacheHint::Uncached, CacheHint::Cached>() &&
-             !are_all_equal_to<CacheHint::Uncached>(L1H, L2H);
+  bool Res = are_all_equal_to<CacheHint::Default>(L1H, L2H) ||
+             (L1H.is_one_of<CacheHint::Uncached, CacheHint::Cached,
+                            CacheHint::Streaming>() &&
+              L2H.is_one_of<CacheHint::Uncached, CacheHint::Cached>() &&
+              !are_all_equal_to<CacheHint::Uncached>(L1H, L2H));
 #ifdef CM_HAS_LSC_L1L3CC_HINT
   Res = Res || (L1H.is_one_of<CacheHint::Uncached, CacheHint::Cached>() &&
                 L2H == CacheHint::ConstCached);
