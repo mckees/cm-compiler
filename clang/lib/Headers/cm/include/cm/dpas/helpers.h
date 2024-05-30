@@ -16,6 +16,18 @@ static_assert(0, "CM:w:dpas/helpers.h should not be included explicitly - only "
 
 #include <cm/cm_common.h>
 
+#define CM_HAS_DPAS_INT_MIX 1
+#define CM_HAS_DPAS_INT2 1
+
+#define CM_HAS_DPAS_INT4 1
+#define CM_HAS_DPAS_INT8 1
+
+#if (CM_GENX >= 1280) //>= PVC
+// FIXME: get these macros from the platforms table
+#define CM_HAS_DPAS_ACC_HALF 1
+#define CM_HAS_DPAS_ACC_BF16 1
+#endif
+
 namespace details {
 inline constexpr int get_dpas_execution_size(CmPrecisionType Precision) {
   (void)Precision;

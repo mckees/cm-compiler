@@ -49,12 +49,37 @@ namespace CheckVersion {
 
 #define CM_HAS_LONG_LONG 1
 
-#if (CM_GENX >= 1200)
-  #define CM_HAS_DP4A 1
-  #define CM_HAS_DP4A_CONTROL CM_HAS_CONTROL(true)
-#else
-  #define CM_HAS_DP4A_CONTROL CM_HAS_CONTROL(false)
-#endif
+#ifdef CM_HAS_BF16
+#define CM_HAS_BF16_CONTROL CM_HAS_CONTROL(true)
+#else // CM_HAS_BF16
+#define CM_HAS_BF16_CONTROL CM_HAS_CONTROL(false)
+#endif // CM_HAS_BF16
+
+#ifdef CM_HAS_TF32
+#define CM_HAS_TF32_CONTROL CM_HAS_CONTROL(true)
+#else // CM_HAS_TF32
+#define CM_HAS_TF32_CONTROL CM_HAS_CONTROL(false)
+#endif // CM_HAS_TF32
+
+
+#ifdef CM_HAS_BFN
+#define CM_HAS_BFN_CONTROL CM_HAS_CONTROL(true)
+#else // CM_HAS_BFN
+#define CM_HAS_BFN_CONTROL CM_HAS_CONTROL(false)
+#endif // CM_HAS_BFN
+
+#ifdef CM_HAS_DP4A
+#define CM_HAS_DP4A_CONTROL CM_HAS_CONTROL(true)
+#else // CM_HAS_DP4A
+#define CM_HAS_DP4A_CONTROL CM_HAS_CONTROL(false)
+#endif // CM_HAS_DP4A
+
+#if CM_HAS_SRND_FP32_TO_FP16
+#define CM_HAS_STOCHASTIC_ROUNDING 1
+#define CM_HAS_STOCHASTIC_ROUNDING_CONTROL CM_HAS_CONTROL(true)
+#else // CM_HAS_SRND_FP32_TO_FP16
+#define CM_HAS_STOCHASTIC_ROUNDING_CONTROL CM_HAS_CONTROL(false)
+#endif // CM_HAS_SRND_FP32_TO_FP16
 
 #if (CM_GENX >= 1150) //>= ICLLP
   #define CM_HAS_BIT_ROTATE 1
@@ -68,63 +93,6 @@ namespace CheckVersion {
 #if __CM_INTEL_TARGET_MAJOR >= 20
 #define CM_REQUIRES_LEGACY_TRANSLATION 1
 #endif
-
-//BFN
-#if (CM_GENX >= 1270) //>= XEHP_SDV
-  #define CM_HAS_BFN 1
-  #define CM_HAS_BFN_CONTROL CM_HAS_CONTROL(true)
-#else
-  #define CM_HAS_BFN_CONTROL CM_HAS_CONTROL(false)
-#endif
-
-
-//DPAS
-#ifdef CM_HAS_DPAS
-  #define CM_HAS_DPAS_CONTROL CM_HAS_CONTROL(true)
-#else
-  #define CM_HAS_DPAS_CONTROL CM_HAS_CONTROL(false)
-#endif
-
-//DPASW
-#ifdef CM_HAS_DPASW
-  #define CM_HAS_DPASW_CONTROL CM_HAS_CONTROL(true)
-#else
-  #define CM_HAS_DPASW_CONTROL CM_HAS_CONTROL(false)
-#endif
-
-//ACC_BF16 and ACC_HALF
-#if (CM_GENX >= 1280) //>= PVC
-  #define CM_HAS_DPAS_ACC_HALF 1
-  #define CM_HAS_DPAS_ACC_BF16 1
-  #define CM_HAS_DPAS_ACC_HALF_CONTROL CM_HAS_CONTROL(true)
-  #define CM_HAS_DPAS_ACC_BF16_CONTROL CM_HAS_CONTROL(true)
-#else
-  #define CM_HAS_DPAS_ACC_HALF_CONTROL CM_HAS_CONTROL(false)
-  #define CM_HAS_DPAS_ACC_BF16_CONTROL CM_HAS_CONTROL(false)
-#endif
-
-//BF16
-#if defined(CM_HAS_BF16)
-  #define CM_HAS_BF16_CONTROL CM_HAS_CONTROL(true)
-#else
-  #define CM_HAS_BF16_CONTROL CM_HAS_CONTROL(false)
-#endif
-
-#define CM_HAS_DPAS_INT_MIX 1
-#define CM_HAS_DPAS_INT_MIX_CONTROL CM_HAS_CONTROL(true)
-
-#define CM_HAS_DPAS_INT2 1
-#define CM_HAS_DPAS_INT2_CONTROL CM_HAS_CONTROL(true)
-
-#define CM_HAS_DPAS_INT4 1
-#define CM_HAS_DPAS_INT4_CONTROL CM_HAS_CONTROL(true)
-
-#define CM_HAS_DPAS_INT8 1
-#define CM_HAS_DPAS_INT8_CONTROL CM_HAS_CONTROL(true)
-
-
-//DPAS_ODD
-#define CM_HAS_DPAS_ODD 1
 
 //Gateway event
 #if (CM_GENX >= 1150 && CM_GENX <= 1280) //>= ICLLP && <= PVC
@@ -183,16 +151,6 @@ namespace CheckVersion {
   #define CM_HAS_SAMPLE_UNORM_CONTROL  CM_HAS_CONTROL(false)
 #endif
 
-
-// TF32
-//  #if ((CM_GENX == 1280 && CM_GENX_REVID >= 5) || CM_GENX > 1280) //>= PVCXT
-#if (CM_GENX >= 1280) //>= PVC
-#define CM_HAS_TF32 1
-#define CM_HAS_TF32_CONTROL CM_HAS_CONTROL(true)
-#else
-#define CM_HAS_TF32_CONTROL CM_HAS_CONTROL(false)
-#endif
-
 //BitRotate64
 #if (CM_GENX >= 1280) //>= PVC
   #define CM_HAS_BIT_ROTATE_64BIT 1
@@ -201,12 +159,6 @@ namespace CheckVersion {
   #define CM_HAS_BIT_ROTATE_64BIT_CONTROL CM_HAS_CONTROL(false)
 #endif
 
-#if (CM_GENX >= 1280) // >= PVC
-  #define CM_HAS_STOCHASTIC_ROUNDING 1
-  #define CM_HAS_STOCHASTIC_ROUNDING_CONTROL CM_HAS_CONTROL(true)
-#else
-  #define CM_HAS_STOCHASTIC_ROUNDING_CONTROL CM_HAS_CONTROL(false)
-#endif
 #if (CM_GENX >= 1280) // >= PVC
   #define CM_HAS_LSC_SYS_FENCE 1
 #endif

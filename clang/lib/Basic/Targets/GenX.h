@@ -125,11 +125,16 @@ private:
   bool HasFP64 = false;
   bool HasSLMCasInt64 = false;
 
-  bool HasDpas;
-  bool HasDpasw;
-  bool HasDpasFp16;
-  bool HasDpasBf16;
-  bool HasDpasTf32;
+  bool HasBfn = false;
+  bool HasDp4a = false;
+
+  bool HasDpas = false;
+  bool HasDpasw = false;
+  bool HasDpasFp16 = false;
+  bool HasDpasBf16 = false;
+  bool HasDpasTf32 = false;
+
+  bool HasSrndFp32ToFp16 = false;
 
   unsigned GrfWidth = 256;
   std::unordered_set<unsigned> SupportedGrfNums;

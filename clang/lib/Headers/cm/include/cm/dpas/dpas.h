@@ -20,6 +20,13 @@ static_assert(0, "CM:w:dpas/dpas.h should not be included explicitly - only "
 
 #include "helpers.h"
 
+#ifdef CM_HAS_DPAS
+#define CM_HAS_DPAS_ODD 1
+#define CM_HAS_DPAS_CONTROL CM_HAS_CONTROL(true)
+#else
+#define CM_HAS_DPAS_CONTROL CM_HAS_CONTROL(false)
+#endif
+
 namespace details {
 template <CmPrecisionType Src1Ty, CmPrecisionType Src2Ty, int SystolicDepth,
           int RepeatCount, typename ResTy, typename AccTy, typename T1,

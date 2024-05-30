@@ -131,6 +131,16 @@ void GenXTargetInfo::getTargetDefines(const LangOptions &Opts,
     Builder.defineMacro("CM_HAS_DOUBLE", "1");
   if (HasBFloat16)
     Builder.defineMacro("CM_HAS_BF16", "1");
+  if (HasDpasTf32)
+    Builder.defineMacro("CM_HAS_TF32", "1");
+
+  if (HasBfn)
+    Builder.defineMacro("CM_HAS_BFN", "1");
+  if (HasDp4a)
+    Builder.defineMacro("CM_HAS_DP4A", "1");
+  if (HasSrndFp32ToFp16)
+    Builder.defineMacro("CM_HAS_SRND_FP32_TO_FP16", "1");
+
   if (HasDpas)
     Builder.defineMacro("CM_HAS_DPAS", "1");
   if (HasDpasw)
