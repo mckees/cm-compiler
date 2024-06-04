@@ -13,6 +13,9 @@ on:
 env:
   NOTIFY: ${{ secrets.NOTIFY }}
 
+permissions:
+  contents: read
+
 jobs:
   notify:
     runs-on: [self-hosted, linux, small]
