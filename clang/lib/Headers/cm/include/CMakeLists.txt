@@ -69,6 +69,7 @@ set(CM_HEADERS
   # SPIR-V function definitions
   cm/spirv/barrier.h
   cm/spirv/builtins.h
+  cm/spirv/math.h
   cm/spirv/conversion.h
   cm/spirv/ocl.h
   # SPIR-V extensions

@@ -1,6 +1,6 @@
 /*========================== begin_copyright_notice ============================
 
-Copyright (C) 2021 Intel Corporation
+Copyright (C) 2021-2024 Intel Corporation
 
 SPDX-License-Identifier: MIT
 
@@ -94,13 +94,6 @@ _GENX_MAIN_ void test1() {
   vector<long long, 16> sum12 = cm_addc(a12, b12, carry12); // expected-error{{no matching function for call to 'cm_addc'}}
   vector<long long, 16> borrow12;
   vector<long long, 16> sub12 = cm_subb(a12, b12, borrow12); // expected-error{{no matching function for call to 'cm_subb'}}
-
-  vector<unsigned long long, 16> a13;
-  vector<unsigned long long, 16> b13;
-  vector<unsigned long long, 16> carry13;
-  vector<unsigned long long, 16> sum13 = cm_addc(a13, b13, carry13); // expected-error{{no matching function for call to 'cm_addc'}}
-  vector<unsigned long long, 16> borrow13;
-  vector<unsigned long long, 16> sub13 = cm_subb(a13, b13, borrow13); // expected-error{{no matching function for call to 'cm_subb'}}
 
   vector<char, 16> a14;
   vector<unsigned short, 16> b14;

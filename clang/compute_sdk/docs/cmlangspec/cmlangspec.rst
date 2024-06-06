@@ -1266,7 +1266,7 @@ Add with carry.
 * Parameter 3: matrix_ref, vector_ref or reference to a scalar
 * Return: vector or scalar
 
-Only unsigned type arguments are supported.
+Only `unsigned` and `unsigned long long` type arguments are supported.
 
 cm_subb
 ^^^^^^^
@@ -1278,7 +1278,7 @@ Subtraction with borrow.
 * Parameter 3: matrix_ref, vector_ref or reference to a scalar
 * Return: vector or scalar
 
-Only unsigned type arguments are supported.
+Only `unsigned` and `unsigned long long` type arguments are supported.
 
 cm_mul<T>
 ^^^^^^^^^

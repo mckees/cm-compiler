@@ -46,6 +46,7 @@ SPDX-License-Identifier: MIT
 #include "dpas/dpasw.h"
 
 #include "spirv/extensions/khr/shader_clock.h"
+#include "spirv/math.h"
 
 #if defined(CM_HAS_BF16)
 using bfloat16 = __bf16;
@@ -91,125 +92,126 @@ cm_add(T1 src0, T2 src1, int flag = _GENX_NOSAT) {
 }
 
 // cm_addc
-template <int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<unsigned, SZ>
-cm_addc(vector<unsigned, SZ> src0, vector<unsigned, SZ> src1,
-        vector_ref<unsigned, SZ> carry) {
-  return details::__cm_intrinsic_impl_addc(src0, src1, carry);
+// Vector i32
+template <typename T, int SZ>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA
+    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
+                            vector<T, SZ> >::type
+    cm_addc(vector<T, SZ> src0, vector<T, SZ> src1, vector_ref<T, SZ> carry) {
+  auto Result = __spirv_IAddCarry(src0, src1);
+  carry = Result.C;
+  return Result.Res;
 }
 
-template <int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<unsigned, SZ>
-cm_addc(vector<unsigned, SZ> src0, unsigned src1,
-        vector_ref<unsigned, SZ> carry) {
-  vector<unsigned, SZ> Src1 = src1;
+// Scalar
+template <typename T>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA
+    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
+                            T>::type
+    cm_addc(T src0, T src1, T &carry) {
+  auto Result = __spirv_IAddCarry(src0, src1);
+  carry = Result.C;
+  return Result.Res;
+}
+
+template <typename T, int SZ>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
+cm_addc(T src0, vector<T, SZ> src1, vector_ref<T, SZ> carry) {
+  vector<T, SZ> Src0 = src0;
+  return cm_addc(Src0, src1, carry);
+}
+
+template <typename T, int SZ>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
+cm_addc(vector<T, SZ> src0, T src1, vector_ref<T, SZ> carry) {
+  vector<T, SZ> Src1 = src1;
   return cm_addc(src0, Src1, carry);
 }
 
-template <int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<unsigned, N1, N2>
-cm_addc(matrix<unsigned, N1, N2> src0, matrix<unsigned, N1, N2> src1,
-        matrix_ref<unsigned, N1, N2> carry) {
-  vector<unsigned, N1 *N2> Src0 = src0;
-  vector<unsigned, N1 *N2> Src1 = src1;
-  vector_ref<unsigned, N1 *N2> Carry = carry.format<unsigned>();
+template <typename T, int N1, int N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+cm_addc(matrix<T, N1, N2> src0, matrix<T, N1, N2> src1,
+        matrix_ref<T, N1, N2> carry) {
+  vector<T, N1 *N2> Src0 = src0;
+  vector<T, N1 *N2> Src1 = src1;
+  vector_ref<T, N1 *N2> Carry = carry.format<T>();
   return cm_addc(Src0, Src1, Carry);
 }
 
-template <int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<unsigned, N1, N2>
-cm_addc(matrix<unsigned, N1, N2> src0, unsigned src1,
-        matrix_ref<unsigned, N1, N2> carry) {
-  vector<unsigned, N1 *N2> Src0 = src0;
-  vector<unsigned, N1 *N2> Src1 = src1;
-  vector_ref<unsigned, N1 *N2> Carry = carry.format<unsigned>();
-  return cm_addc(Src0, Src1, Carry);
+template <typename T, int N1, int N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+cm_addc(T src0, matrix<T, N1, N2> src1, matrix_ref<T, N1, N2> carry) {
+  matrix<T, N1, N2> Src0 = src0;
+  return cm_addc(Src0, src1, carry);
 }
 
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA
-unsigned cm_addc(unsigned src0, unsigned src1, unsigned &carry) {
-  vector<unsigned, 1> Src0 = src0;
-  vector<unsigned, 1> Src1 = src1;
-  vector<unsigned, 1> Carry;
-  vector<unsigned, 1> Result = cm_addc(Src0, Src1, Carry);
-  carry = Carry(0);
-  return Result(0);
-}
-
-template <int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<unsigned, SZ>
-cm_addc(unsigned src0, vector<unsigned, SZ> src1,
-        vector_ref<unsigned, SZ> carry) {
-  return cm_addc(src1, src0, carry);
-}
-
-template <int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<unsigned, N1, N2>
-cm_addc(unsigned src0, matrix<unsigned, N1, N2> src1,
-        matrix_ref<unsigned, N1, N2> carry) {
-  return cm_addc(src1, src0, carry);
+template <typename T, int N1, int N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+cm_addc(matrix<T, N1, N2> src0, T src1, matrix_ref<T, N1, N2> carry) {
+  matrix<T, N1, N2> Src1 = src1;
+  return cm_addc(src0, Src1, carry);
 }
 
 // cm_subb
-template <int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<unsigned, SZ>
-cm_subb(vector<unsigned, SZ> minuend, vector<unsigned, SZ> subtrahend,
-        vector_ref<unsigned, SZ> borrow) {
-  return details::__cm_intrinsic_impl_subb(minuend, subtrahend, borrow);
+// Vector
+template <typename T, int SZ>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA
+    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
+                            vector<T, SZ> >::type
+    cm_subb(vector<T, SZ> minuend, vector<T, SZ> subtrahend,
+            vector_ref<T, SZ> borrow) {
+  auto Result = __spirv_ISubBorrow(minuend, subtrahend);
+  borrow = Result.C;
+  return Result.Res;
 }
 
-template <int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<unsigned, SZ>
-cm_subb(vector<unsigned, SZ> minuend, unsigned subtrahend,
-        vector_ref<unsigned, SZ> borrow) {
-  vector<unsigned, SZ> Subtrahend = subtrahend;
+// Scalar
+template <typename T>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA
+    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
+                            T>::type
+    cm_subb(T minuend, T subtrahend, T &borrow) {
+  auto Result = __spirv_ISubBorrow(minuend, subtrahend);
+  borrow = Result.C;
+  return Result.Res;
+}
+
+template <typename T, int SZ>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
+cm_subb(vector<T, SZ> minuend, T subtrahend, vector_ref<T, SZ> borrow) {
+  vector<T, SZ> Subtrahend = subtrahend;
   return cm_subb(minuend, Subtrahend, borrow);
 }
 
-template <int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<unsigned, N1, N2>
-cm_subb(matrix<unsigned, N1, N2> minuend, matrix<unsigned, N1, N2> subtrahend,
-        matrix_ref<unsigned, N1, N2> borrow) {
-  vector<unsigned, N1 *N2> Minuend = minuend;
-  vector<unsigned, N1 *N2> Subtrahend = subtrahend;
-  vector_ref<unsigned, N1 *N2> Borrow = borrow.format<unsigned>();
-  return cm_subb(Minuend, Subtrahend, Borrow);
-}
-
-template <int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<unsigned, N1, N2>
-cm_subb(matrix<unsigned, N1, N2> minuend, unsigned subtrahend,
-        matrix_ref<unsigned, N1, N2> borrow) {
-  vector<unsigned, N1 *N2> Minuend = minuend;
-  vector<unsigned, N1 *N2> Subtrahend = subtrahend;
-  vector_ref<unsigned, N1 *N2> Borrow = borrow.format<unsigned>();
-  return cm_subb(Minuend, Subtrahend, Borrow);
-}
-
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA
-unsigned cm_subb(unsigned minuend, unsigned subtrahend, unsigned &borrow) {
-  vector<unsigned, 1> Minuend = minuend;
-  vector<unsigned, 1> Subtrahend = subtrahend;
-  vector<unsigned, 1> Borrow;
-  vector<unsigned, 1> Result = cm_subb(Minuend, Subtrahend, Borrow);
-  borrow = Borrow(0);
-  return Result(0);
-}
-
-template <int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<unsigned, SZ>
-cm_subb(unsigned minuend, vector<unsigned, SZ> subtrahend,
-        vector_ref<unsigned, SZ> borrow) {
-  vector<unsigned, SZ> Minuend = minuend;
+template <typename T, int SZ>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
+cm_subb(T minuend, vector<T, SZ> subtrahend, vector_ref<T, SZ> borrow) {
+  vector<T, SZ> Minuend = minuend;
   return cm_subb(Minuend, subtrahend, borrow);
 }
 
-template <int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<unsigned, N1, N2>
-cm_subb(unsigned minuend, matrix<unsigned, N1, N2> subtrahend,
-        matrix_ref<unsigned, N1, N2> borrow) {
-  matrix<unsigned, N1, N2> Minuend = minuend;
+template <typename T, int N1, int N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+cm_subb(matrix<T, N1, N2> minuend, matrix<T, N1, N2> subtrahend,
+        matrix_ref<T, N1, N2> borrow) {
+  vector<T, N1 *N2> Minuend = minuend;
+  vector<T, N1 *N2> Subtrahend = subtrahend;
+  vector_ref<T, N1 *N2> Borrow = borrow.format<T>();
+  return cm_subb(Minuend, Subtrahend, Borrow);
+}
+
+template <typename T, int N1, int N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+cm_subb(T minuend, matrix<T, N1, N2> subtrahend, matrix_ref<T, N1, N2> borrow) {
+  matrix<T, N1, N2> Minuend = minuend;
   return cm_subb(Minuend, subtrahend, borrow);
+}
+
+template <typename T, int N1, int N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+cm_subb(matrix<T, N1, N2> minuend, T subtrahend, matrix_ref<T, N1, N2> borrow) {
+  matrix<T, N1, N2> Subtrahend = subtrahend;
+  return cm_subb(minuend, Subtrahend, borrow);
 }
 
 // cm_mul
