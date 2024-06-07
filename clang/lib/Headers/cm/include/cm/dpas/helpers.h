@@ -28,7 +28,66 @@ static_assert(0, "CM:w:dpas/helpers.h should not be included explicitly - only "
 #define CM_HAS_DPAS_ACC_BF16 1
 #endif
 
+enum class CmPrecisionType {
+  CM_Precision_U2 = 2,   // unsigned 2 bits
+  CM_Precision_S2 = 3,   // signed 2 bits
+  CM_Precision_U4 = 4,   // unsigned 4 bits
+  CM_Precision_S4 = 5,   // signed 4 bits
+  CM_Precision_U8 = 6,   // unsigned 8 bits
+  CM_Precision_S8 = 7,   // signed 8 bits
+  CM_Precision_BF16 = 8, // bfloat16
+  CM_Precision_FP16 = 9, // half float
+  CM_Precision_TF32 = 11, // tensorfloat 32
+};
+
+#define CM_PRECISION_U2 CmPrecisionType::CM_Precision_U2
+#define CM_PRECISION_U4 CmPrecisionType::CM_Precision_U4
+#define CM_PRECISION_U8 CmPrecisionType::CM_Precision_U8
+#define CM_PRECISION_S2 CmPrecisionType::CM_Precision_S2
+#define CM_PRECISION_S4 CmPrecisionType::CM_Precision_S4
+#define CM_PRECISION_S8 CmPrecisionType::CM_Precision_S8
+#define CM_PRECISION_BF CmPrecisionType::CM_Precision_BF16
+#define CM_PRECISION_HF CmPrecisionType::CM_Precision_FP16
+#define CM_PRECISION_TF32 CmPrecisionType::CM_Precision_TF32
+
 namespace details {
+inline constexpr unsigned get_dpas_precision_bits(CmPrecisionType Ty) {
+  switch (Ty) {
+  case CmPrecisionType::CM_Precision_U2:
+  case CmPrecisionType::CM_Precision_S2:
+    return 2;
+  case CmPrecisionType::CM_Precision_U4:
+  case CmPrecisionType::CM_Precision_S4:
+    return 4;
+  case CmPrecisionType::CM_Precision_U8:
+  case CmPrecisionType::CM_Precision_S8:
+    return 8;
+  case CmPrecisionType::CM_Precision_BF16:
+  case CmPrecisionType::CM_Precision_FP16:
+    return 16;
+  case CmPrecisionType::CM_Precision_TF32:
+    return 32;
+  }
+  return 0;
+}
+
+inline constexpr unsigned get_dpas_ops_per_channel(CmPrecisionType Src1Ty,
+                                                   CmPrecisionType Src2Ty) {
+  auto Src1Bits = get_dpas_precision_bits(Src1Ty);
+  auto Src2Bits = get_dpas_precision_bits(Src2Ty);
+  auto Src1ElementsPerDWord = 32 / Src1Bits;
+  auto Src2ElementsPerDWord = 32 / Src2Bits;
+
+  auto OpsPerChannel = Src1ElementsPerDWord < Src2ElementsPerDWord
+                           ? Src1ElementsPerDWord
+                           : Src2ElementsPerDWord;
+
+  if (OpsPerChannel > 8)
+    OpsPerChannel = 8;
+
+  return OpsPerChannel;
+}
+
 inline constexpr int get_dpas_execution_size(CmPrecisionType Precision) {
   (void)Precision;
   // The dpas execution size is the number of 32-bit elements per register.
@@ -69,7 +128,7 @@ constexpr bool is_valid_dpas_int(CmPrecisionType Src1Ty,
                  is_one_of_v<AccTy, int, unsigned>;
 
 #if !defined(CM_HAS_DPAS_INT_MIX)
-  IsValid &= get_precision_bits(Src1Ty) == get_precision_bits(Src2Ty);
+  IsValid &= get_dpas_precision_bits(Src1Ty) == get_dpas_precision_bits(Src2Ty);
 #endif // !defined(CM_HAS_DPAS_INT_MIX)
 
   return IsValid;
@@ -105,7 +164,7 @@ constexpr bool is_valid_dpas_bf16(CmPrecisionType Src1Ty,
 #endif // !defined(CM_HAS_DPAS_ACC_BF16)
 
   return IsValid;
-#else // defined(CM_HAS_BF16)
+#else  // defined(CM_HAS_BF16)
   return false;
 #endif // defined(CM_HAS_BF16)
 }
@@ -132,7 +191,8 @@ constexpr bool is_valid_dpas(CmPrecisionType Src1Ty, CmPrecisionType Src2Ty) {
   return IsValid;
 }
 
-constexpr bool is_valid_repeat_count(int RepeatCount, CmPrecisionType Precision) {
+constexpr bool is_valid_repeat_count(int RepeatCount,
+                                     CmPrecisionType Precision) {
   (void)Precision;
   return RepeatCount >= 1 && RepeatCount <= 8;
 }
@@ -148,10 +208,10 @@ constexpr unsigned get_dpas_src1_size(CmPrecisionType Src1Ty,
                                       unsigned SystolicDepth) {
   unsigned ExecSize = get_dpas_execution_size(Src1Ty);
 
-  unsigned OpsPerChannel = get_ops_per_channel(Src1Ty, Src2Ty);
+  unsigned OpsPerChannel = get_dpas_ops_per_channel(Src1Ty, Src2Ty);
   unsigned KDimension = SystolicDepth * OpsPerChannel;
 
-  unsigned Src1Bits = get_precision_bits(Src1Ty);
+  unsigned Src1Bits = get_dpas_precision_bits(Src1Ty);
   unsigned ElementsPerDWord = 32 / Src1Bits;
 
   return KDimension * ExecSize / ElementsPerDWord;
@@ -161,10 +221,10 @@ constexpr unsigned get_dpas_src2_size(CmPrecisionType Src1Ty,
                                       CmPrecisionType Src2Ty,
                                       unsigned RepeatCount,
                                       unsigned SystolicDepth) {
-  unsigned OpsPerChannel = get_ops_per_channel(Src1Ty, Src2Ty);
+  unsigned OpsPerChannel = get_dpas_ops_per_channel(Src1Ty, Src2Ty);
   unsigned KDimension = SystolicDepth * OpsPerChannel;
 
-  unsigned Src2Bits = get_precision_bits(Src2Ty);
+  unsigned Src2Bits = get_dpas_precision_bits(Src2Ty);
   unsigned ElementsPerDWord = 32 / Src2Bits;
 
   return RepeatCount * KDimension / ElementsPerDWord;

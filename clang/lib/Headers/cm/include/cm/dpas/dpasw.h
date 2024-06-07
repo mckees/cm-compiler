@@ -56,6 +56,20 @@ CM_NODEBUG CM_INLINE void dpasw_check_common() {
                                                  SystolicDepth),
                   "Invalid size for Src2 in DPASW operation");
 }
+
+template <CmPrecisionType Src1Precision, CmPrecisionType Src2Precision,
+          int SystolicDepth, int RepeatCount, typename AccTy, typename Src1Ty,
+          typename Src2Ty, int AccSize, int Src1Size, int Src2Size>
+vector<AccTy, AccSize> __cm_intrinsic_impl_dpasw(vector<AccTy, AccSize> Acc,
+                                                 vector<Src1Ty, Src1Size> Src1,
+                                                 vector<Src2Ty, Src2Size> Src2);
+
+template <CmPrecisionType Src1Precision, CmPrecisionType Src2Precision,
+          int SystolicDepth, int RepeatCount, typename AccTy, typename Src1Ty,
+          typename Src2Ty, int AccSize, int Src1Size, int Src2Size>
+vector<AccTy, AccSize>
+__cm_intrinsic_impl_dpasw_nosrc0(int Null, vector<Src1Ty, Src1Size> Src1,
+                                 vector<Src2Ty, Src2Size> Src2);
 } // namespace details
 
 template <CmPrecisionType Src1Ty, CmPrecisionType Src2Ty, int SystolicDepth,
