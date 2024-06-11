@@ -26,7 +26,6 @@ set(CM_HEADERS
   cm/cm_sampler.h
   cm/cm_send.h
   cm/cm_spec_constant.h
-  cm/cm_srnd.h
   cm/cm_svm.h
   cm/cm_target.h
   cm/cm_threads.h
@@ -65,6 +64,8 @@ set(CM_HEADERS
   cm/dpas/helpers.h
   cm/dpas/dpas.h
   cm/dpas/dpasw.h
+
+  cm/intrinsics/srnd.h
 
   # SPIR-V function definitions
   cm/spirv/barrier.h

@@ -21,7 +21,6 @@ SPDX-License-Identifier: MIT
 #include "cm_bfn.h"
 #include "cm_cvt.h"
 #include "cm_lsc.h"
-#include "cm_srnd.h"
 #include "cm_internal.h"
 #include "cm_sampler.h"
 #include "cm_traits.h"
@@ -44,6 +43,8 @@ SPDX-License-Identifier: MIT
 
 #include "dpas/dpas.h"
 #include "dpas/dpasw.h"
+
+#include "intrinsics/srnd.h"
 
 #include "spirv/extensions/khr/shader_clock.h"
 #include "spirv/math.h"

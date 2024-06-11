@@ -335,9 +335,6 @@ vector<T1, N> __cm_intrinsic_impl_dp4a(vector<T2, N> src0, vector<T3, N> src1, v
 template <typename T>
 T __cm_intrinsic_impl_bfn(T s0, T s1, T s2, unsigned char bfval);
 
-template <typename T0, typename T1, typename T2, int N>
-vector<T0, N> __cm_intrinsic_impl_srnd(vector<T1, N> src1, vector<T2, N> src2);
-
 // ----------------------------------------------------------------------------
 //
 // Conversions to special types
