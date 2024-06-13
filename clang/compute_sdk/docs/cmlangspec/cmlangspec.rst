@@ -1220,6 +1220,7 @@ cm_abs<T>
 Absolute value. The behavior is undefined if the result cannot fit in T.
 
 .. code-block:: c++
+
   RetTy cm_abs(FstTy src0, int flag = _GENX_NOSAT)
 
 There are several overloads for different types:
@@ -1240,6 +1241,7 @@ cm_add<T>
 cm_add currently is implemented in quite a strange way taking the worst parts from both C++ and our HW:
 
 .. code-block:: c++
+
   RetTy cm_add(FstTy src0, SndTy src1, int flag = _GENX_NOSAT)
 
 There are several overloads for different types:
@@ -1798,6 +1800,7 @@ Division with IEEE compliant semantics.
 * Return: vector or scalar.
 
 Only single or double precision floating-point type arguments are supported.
+
 
 cm_imul
 ^^^^^^^
@@ -6909,9 +6912,9 @@ cm_svm_gather4_scaled
 
 .. code-block:: c++
 
-template <typename T, int N, int M>
-cm_svm_gather4_scaled(vector<svmptr_t, N> vOffset, vector<T, M> vDst,
-                      ChannelMaskType mask)
+  template <typename T, int N, int M>
+  cm_svm_gather4_scaled(vector<svmptr_t, N> vOffset, vector<T, M> vDst,
+                        ChannelMaskType mask)
 
 Where:
 
@@ -6947,9 +6950,9 @@ cm_svm_scatter4_scaled
 
 .. code-block:: c++
 
-template <typename T, int N, int M>
-cm_svm_scatter4_scaled(vector<svmptr_t, N> vOffset, vector<T, M> vSrc,
-                       ChannelMaskType mask)
+  template <typename T, int N, int M>
+  cm_svm_scatter4_scaled(vector<svmptr_t, N> vOffset, vector<T, M> vSrc,
+                         ChannelMaskType mask)
 
 Where:
 
@@ -7000,20 +7003,22 @@ modes) and the results in this case may be undefined.
 
 Valid values for the float control setting are as follows:
 
-======================== ============================================================
+======================== =======================================================
 Attribute Name           Description
-======================== ============================================================
+======================== =======================================================
 CM_RTE                   Set round to nearest even (default)
 CM_RTP                   Set round towards +ve infinity
 CM_RTN                   Set round towards -ve infinity
 CM_RTZ                   Set round towards zero
-CM_DENORM_RTZ            Set all denorm setting to Flush To Zero (no denorms) (default)
-CM_DENORM_D_ALLOW        Set double to allow denorms
-CM_DENORM_F_ALLOW        Set float to allow denorms
-CM_DENORM_HF_ALLOW       Set half to allow denorms
-CM_DENORM_ALLOW          Set all float types (double, float, half) to allow denorms
+CM_DENORM_RTZ            Set all denorm setting to Flush To Zero (no denorms,
+                         default)
+CM_DENORM_D_ALLOW        Set ``double`` to allow denorms
+CM_DENORM_F_ALLOW        Set ``float`` to allow denorms
+CM_DENORM_HF_ALLOW       Set ``half`` to allow denorms
+CM_DENORM_ALLOW          Set all float types (``double``, ``float``, ``half``)
+                         to allow denorms
 CM_FLOAT_MODE_IEEE       Set single float mode to IEEE (default)
-======================== ============================================================
+======================== =======================================================
 
 
 Round to even (RTE) (default)
@@ -7045,7 +7050,7 @@ Round to negative infinity (RTN)
   }
 
 Round to zero (RTZ)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: c++
 
@@ -9382,7 +9387,7 @@ function and can be defined with any C or matrix/vector type. They may not have 
   }
 
 7.5 Vector and matrices with elements of a pointer type
------------------------------------------------------
+-------------------------------------------------------
 
 Vectors and matrices can contain elements of a pointer type with an optional address space qualifier.
 Vector/matrix of elements of an integral type can be cast to a vector/matrix of elements of a pointer type

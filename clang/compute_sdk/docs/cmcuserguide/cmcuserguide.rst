@@ -48,12 +48,6 @@ includes appropriate header files.
 The Gen/Xe target may be specified using a codename (e.g. TGLLP) or number (e.g. gen12).
 The case is not significant, so tgllp, TGLLP, and Tgllp are all equivalent.
 
-Some Xe targets have steppings: A0, B0, etc... Stepping is different GPU version
-inside single Xe target. It is used to update GPU, fix HW bugs, perf improvements.
-
-To specify stepping in close-to-metal way, revision id is used.
-Option Qxcm_revid passes revision id, corresponding to stepping.
-
 When a Gen/Xe target is specified, two macros are predefined.
 The macro CM_GENX is given a value which identifies the target.
 For Gen targets only, macro of the form CM_GEN\ *n* is defined (without a value).
@@ -129,9 +123,9 @@ Note that all C for Metal specific options (i.e. those starting with Qxcm or
 mCM) may use a slash '/' or minus '-' as a prefix. Most Clang options only
 accept minus '-'.
 
-============================= ==============
+============================= =================================================
 Option                        Description
-============================= ==============
+============================= =================================================
 -help                         Prints a list of compiler options - note that not
                               all options are applicable to CM.
 
@@ -141,97 +135,88 @@ Option                        Description
                               gen8 and bdw both specify a Broadwell target.
                               Case is not significant.
 
-                              The macros CM_GENX and CM_GEN<x> will be predefined
-                              according to the target that is specified - e.g.
-                              for BDW, CM_GENX will have a value of 800,
-                              and CM_GEN8 will be defined (without a value).
+                              The macros CM_GENX and CM_GEN<x> will be
+                              predefined according to the target that is
+                              specified - e.g. for BDW, CM_GENX will have
+                              a value of 800, and CM_GEN8 will be defined
+                              (without a value).
 
 -binary-format <value>        Sets in which format should be generated binary;
                               values: 'cm', 'ocl' or 'ze'
 
 -binary-format=<value>        Alias for -binary-format <value>
 
--fvolatile-global             Treats global variables as volatile, do not promote them
-                              to registers early.
+-fvolatile-global             Treats global variables as volatile, do not
+                              promote them to registers early.
 
 -g                            Enable debug info generation.
 
--g<N>                         Enable debug info generation of given level. -g0 disables
-                              debug info, -g1 enables line numbers, -g2 enables full
-                              debug info.
+-g<N>                         Enable debug info generation of given level. -g0
+                              disables debug info, -g1 enables line numbers,
+                              -g2 enables full debug info.
 
--mCM_disable_jmpi             Disables jmpi (only available if -Qxcm_jit_target=... is
-                              also specified).
+-mCM_disable_jmpi             Disables jmpi
 
 -mCM_init_global              Always initialize CM global variables
 
--mCM_jit_option<value>        Passes specified value to the GenX Finalizer as an option.
+-mCM_jit_option=<value>       Passes the option to the GenX Finalizer.
 
--mCM_no_debug                 Disables debug info (line tables) when -g is not specified.
+-mCM_no_debug                 Disables debug info (line tables) when -g is not
+                              specified.
 
 -mCM_no_vector_decomposition  Disables vector decomposition optimization.
 
 -mCM_old_asm_name             Emits the kernel asm name in old style
-                              (<filename>_<idx>.(visa)asm).
+                              (``<filename>_<idx>.(visa)asm``).
 
 -mCM_printfargs               Prints arguments used for finalizer invocation.
 
--mCM_printregusage            Prints number of GRFs used by each kernel. Note that
-                              local register allocation is turned off.
-                              (only available if -Qxcm_jit_target=... is also specified)
+-mCM_printregusage            Prints number of GRFs used by each kernel. Note
+                              that local register allocation is turned off.
 
 -mCM_reverse_kernels          Emits the kernel asm name in reversed order.
 
 -mCM_translate_legacy         Translates legacy intrinsics.
 
--mCM_warn_callable            Generates warning instead of error if callable is called
-                              in the middle.
+-mCM_warn_callable            Generates warning instead of error if callable is
+                              called in the middle.
 
 -mdump_asm                    Requests creation of assembly dumps for the
-                              compiled kernels.
-                              If <CM_FORCE_ASSEMBLY_DUMP> environment variable
-                              is set then this option is enabled implicitly.
-                              But it's recommended to use IGC_ShaderDumpEnable=1 instead
-                              to get dumps.
+                              compiled kernels. It's recommended to use shader
+                              dumps instead of this option.
 
--menableiga                   Enable IGA assembler syntax (only available if
-                              -Qxcm_jit_target=... is also specified)
+-menableiga                   Enable IGA assembler syntax.
 
--Qxcm_jit_target<value>       Specifies the target architecture:
-                              hsw | bdw | chv | skl | bxt | kbl | icl | tgllp
-                              But it's recommended to use -march instead.
+-Qxcm_opt_report              Prints GenX Finalizer optimization report.
 
--Qxcm_opt_report              Prints GenX Finalizer optimization report
-                              (only available if -Qxcm_jit_target=... is also specified).
+-Qxcm_preschedule_ctrl<value> Passes the -presched-ctrl <ctrl> to the Finalizer.
 
--Qxcm_preschedule_ctrl<value> Passes the -presched-ctrl <ctrl> to the GenX Finalizer.
+-Qxcm_preschedule_rp<value>   Passes the -presched-rp <rp> to the Finalizer.
 
--Qxcm_preschedule_rp<value>   Passes the -presched-rp <rp> to the GenX Finalizer.
-
--Qxcm_print_asm_count         Prints gen instruction count for each kernel
-                              (only available if -Qxcm_jit_target=... is also specified).
+-Qxcm_print_asm_count         Prints gen instruction count for each kernel.
 
 -Qxcm_release                 Strips debug information from generated .isa file
 
--Qxcm_revid                   Specifies revision id inside given target (use with march=)
-                              Valid only for some platforms.
+-Qxcm_register_file_size=<N>  Specifies number of registers to use for register
+                              allocation. The values allowed with this option
+                              are *128*, *256* and *auto* for XeHP and further
+                              platforms. For pre-XeHP platforms *128* is the
+                              only allowed value. Auto value enables compiler
+                              heuristics to determine the number of registers.
 
--Qxcm_register_file_size=<N>  Specifies number of registers to use for register allocation.
-                              The values allowed with this option are `128`, `256` and `auto`
-                              for XeHP and further platforms. For pre-XeHP platforms `128`
-                              is the only allowed value. Auto value enables compiler heuristics
-                              to determine the number of registers.
 
+                              The default value is *128*.
 
 -Qxcm_doubleGRF               Alias for ``-Qxcm_register_file_size=256``.
 
--vc-use-plain-2d-images       Treat "image2d_t" annotated surfaces as non-media 2D images.
+-vc-use-plain-2d-images       Treat "image2d_t" annotated surfaces as non-media
+                              2D images.
 
--###                          This option causes the cmc driver to print the commands
-                              that would be used to perform the compilation
-                              (cmc front-end and Gen Finalizer commands).
+-###                          This option causes the cmc driver to print the
+                              commands that would be used to perform the
+                              compilation.
 
-============================= ==============
+============================= =================================================
 
 5 Implicit Macros
 =================
@@ -248,17 +233,6 @@ __CM                           Always defined (without a value) to indicate that
 
 __CMC                          Always defined (without a value) to indicate that the
                                compiler is cmc.
-
-CM_GENX                        Defined whenever a specific Gen target has been
-                               specified (-march option). See the table in
-                               :ref:`SupportedGenTargets` for the value for each
-                               target.
-
-CM_\ *gen*                     Defined (without a value) when the corresponding
-                               target has been specified, e.g. if the target is
-                               specified to be SKL then CM_GEN9 will be defined. See
-                               the table in :ref:`SupportedGenTargets` for the name
-                               of the macro defined for each Gen target.
 
 CM_HAS_LONG_LONG               Defined (with value 1) if the specifed target supports
                                the ``long long`` type.
@@ -321,10 +295,6 @@ CM_HAS_DPAS_ACC_BF16           Defined (with value 1) if the specifed target sup
                                the BFloat16 data type as an accumulator for the
                                ``cm_dpas`` built-in function.
 
-CM_HAS_DPAS_ODD                DEPRECATED. Defined (with value 1) if the specifed
-                               target supports odd values for as RepeatCount the
-                               ``cm_dpas`` built-in function.
-
 CM_HAS_DPASW                   Defined (with value 1) if the specifed target supports
                                the ``cm_dpasw`` built-in function.
 
@@ -358,9 +328,9 @@ CM_MAX_SLM_SIZE                Maximum shared local memory per group.
 6 Environment Variables
 =======================
 
-====================== ==================
+====================== =========================================================
 Environment variable   Description
-====================== ==================
+====================== =========================================================
 ENABLE_IGA             By default the GenX finalizer uses the legacy assembler
                        syntax for the assembly files it generates for platforms
                        before Gen11. If the ENABLE_IGA environment variable has
@@ -372,15 +342,15 @@ CM_FORCE_ASSEMBLY_DUMP Enables "-mCM_old_asm_name -mdump_asm" options if set.
 
 CM_INCLUDE_DIR         Directory with the include files.
 
-IGC_ShaderDumpEnable=1 (default=0) causes all LLVM, assembly, and ISA code generated by
-                       the CM compiler to be written to /tmp/IntelIGC/<application_name>.
+IGC_ShaderDumpEnable=1 (default=0) causes all LLVM, assembly, and ISA code
+                       generated by the CM compiler to be written to
+                       ``/tmp/IntelIGC/<application_name>``.
 
-IGC_DumpToCurrentDir=1 (default=0) writes all the files created by IGC_ShaderDumpEnable
-                       to your current directory instead of /tmp/IntelIGC/<application_name>.
-                       Since this is potentially a lot of files, it is recommended to create
-                       a temporary directory just for the purpose of holding these files.
+IGC_DumpToCurrentDir=1 (default=0) writes all the files created by
+                       ``IGC_ShaderDumpEnable`` to your current directory
+                       instead of ``/tmp/IntelIGC/<application_name>``.
 
-====================== ==================
+====================== =========================================================
 
 
 7 Reporting Compiler Bugs
