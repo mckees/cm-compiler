@@ -492,6 +492,8 @@ template <> struct make_signed<unsigned char> {
   typedef char type;
 };
 
+template <typename T> using make_signed_t = typename make_signed<T>::type;
+
 template <typename T> struct make_unsigned {
   typedef T type;
 };
@@ -507,6 +509,8 @@ template <> struct make_unsigned<short> {
 template <> struct make_unsigned<char> {
   typedef unsigned char type;
 };
+
+template <typename T> using make_unsigned_t = typename make_unsigned<T>::type;
 
 /// Transorms input type to a non-_ref type (matrix_ref->matrix, vector_ref->vector)
 template <typename T> struct remove_ref { using type = T; };

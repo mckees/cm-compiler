@@ -84,9 +84,9 @@ _GENX_MAIN_ void test1() {
   vector<unsigned long, 16> a11;
   vector<unsigned long, 16> b11;
   vector<unsigned long, 16> carry11;
-  vector<unsigned long, 16> sum11 = cm_addc(a11, b11, carry11); // expected-error{{no matching function for call to 'cm_addc'}}
+  vector<unsigned long, 16> sum11 = cm_addc(a11, b11, carry11);
   vector<unsigned long, 16> borrow11;
-  vector<unsigned long, 16> sub11 = cm_subb(a11, b11, borrow11); // expected-error{{no matching function for call to 'cm_subb'}}
+  vector<unsigned long, 16> sub11 = cm_subb(a11, b11, borrow11);
 
   vector<long long, 16> a12;
   vector<long long, 16> b12;

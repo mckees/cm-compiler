@@ -289,6 +289,9 @@ _GENX_MAIN_ void test32MixedVector() {
   // CHECK: [[RET_ADDR_SUB_S_V:%[^ ]+]] = getelementptr inbounds [[RES_V_STRUCT32]], [[RES_V_STRUCT32]]* [[SRET_ADDR_SUB_S_V]], i32 0, i32 0
   // CHECK: [[RET_SUB_S_V:%[^ ]+]] = load <16 x i32>, <16 x i32>* [[RET_ADDR_SUB_S_V]], align 64
   // CHECK: store <16 x i32> [[RET_SUB_S_V]], <16 x i32>* %{{.*}}, align 64
+
+  vector<unsigned, 16> sum_v_const = cm_addc(av16, 1, carry_borrow_v16);
+  vector<unsigned, 16> sub_v_const = cm_subb(av16, 1, carry_borrow_v16);
 }
 
 // CHECK-LABEL: test32MixedMatrix

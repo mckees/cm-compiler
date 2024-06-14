@@ -93,12 +93,27 @@ cm_add(T1 src0, T2 src1, int flag = _GENX_NOSAT) {
 }
 
 // cm_addc
-// Vector i32
+namespace details {
+template <typename Ty> struct add_carry;
+
+template <> struct add_carry<unsigned> {
+  using type = unsigned;
+};
+
+template <> struct add_carry<unsigned long> {
+  using type = unsigned long;
+};
+
+template <> struct add_carry<unsigned long long> {
+  using type = unsigned long long;
+};
+
+template <typename Ty> using add_carry_t = typename add_carry<Ty>::type;
+} // namespace details
+
 template <typename T, int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA
-    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
-                            vector<T, SZ> >::type
-    cm_addc(vector<T, SZ> src0, vector<T, SZ> src1, vector_ref<T, SZ> carry) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<details::add_carry_t<T>, SZ>
+cm_addc(vector<T, SZ> src0, vector<T, SZ> src1, vector_ref<T, SZ> carry) {
   auto Result = __spirv_IAddCarry(src0, src1);
   carry = Result.C;
   return Result.Res;
@@ -106,49 +121,51 @@ CM_NODEBUG __SPIRV_WRITER_INLINE_WA
 
 // Scalar
 template <typename T>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA
-    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
-                            T>::type
-    cm_addc(T src0, T src1, T &carry) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA details::add_carry_t<T>
+cm_addc(T src0, T src1, T &carry) {
   auto Result = __spirv_IAddCarry(src0, src1);
   carry = Result.C;
   return Result.Res;
 }
 
 template <typename T, int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
-cm_addc(T src0, vector<T, SZ> src1, vector_ref<T, SZ> carry) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<details::add_carry_t<T>, SZ>
+cm_addc(details::make_unsigned_t<T> src0, vector<T, SZ> src1,
+        vector_ref<T, SZ> carry) {
   vector<T, SZ> Src0 = src0;
   return cm_addc(Src0, src1, carry);
 }
 
 template <typename T, int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
-cm_addc(vector<T, SZ> src0, T src1, vector_ref<T, SZ> carry) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<details::add_carry_t<T>, SZ>
+cm_addc(vector<T, SZ> src0, details::make_unsigned_t<T> src1,
+        vector_ref<T, SZ> carry) {
   vector<T, SZ> Src1 = src1;
   return cm_addc(src0, Src1, carry);
 }
 
 template <typename T, int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<details::add_carry_t<T>, N1, N2>
 cm_addc(matrix<T, N1, N2> src0, matrix<T, N1, N2> src1,
         matrix_ref<T, N1, N2> carry) {
-  vector<T, N1 *N2> Src0 = src0;
-  vector<T, N1 *N2> Src1 = src1;
-  vector_ref<T, N1 *N2> Carry = carry.format<T>();
+  vector<T, N1 * N2> Src0 = src0;
+  vector<T, N1 * N2> Src1 = src1;
+  vector_ref<T, N1 * N2> Carry = carry.format<T>();
   return cm_addc(Src0, Src1, Carry);
 }
 
 template <typename T, int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
-cm_addc(T src0, matrix<T, N1, N2> src1, matrix_ref<T, N1, N2> carry) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<details::add_carry_t<T>, N1, N2>
+cm_addc(details::make_unsigned_t<T> src0, matrix<T, N1, N2> src1,
+        matrix_ref<T, N1, N2> carry) {
   matrix<T, N1, N2> Src0 = src0;
   return cm_addc(Src0, src1, carry);
 }
 
 template <typename T, int N1, int N2>
 CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
-cm_addc(matrix<T, N1, N2> src0, T src1, matrix_ref<T, N1, N2> carry) {
+cm_addc(matrix<T, N1, N2> src0, details::make_unsigned_t<T> src1,
+        matrix_ref<T, N1, N2> carry) {
   matrix<T, N1, N2> Src1 = src1;
   return cm_addc(src0, Src1, carry);
 }
@@ -156,11 +173,9 @@ cm_addc(matrix<T, N1, N2> src0, T src1, matrix_ref<T, N1, N2> carry) {
 // cm_subb
 // Vector
 template <typename T, int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA
-    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
-                            vector<T, SZ> >::type
-    cm_subb(vector<T, SZ> minuend, vector<T, SZ> subtrahend,
-            vector_ref<T, SZ> borrow) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<details::add_carry_t<T>, SZ>
+cm_subb(vector<T, SZ> minuend, vector<T, SZ> subtrahend,
+        vector_ref<T, SZ> borrow) {
   auto Result = __spirv_ISubBorrow(minuend, subtrahend);
   borrow = Result.C;
   return Result.Res;
@@ -168,31 +183,31 @@ CM_NODEBUG __SPIRV_WRITER_INLINE_WA
 
 // Scalar
 template <typename T>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA
-    typename std::enable_if<details::is_type<T, unsigned, unsigned long long>(),
-                            T>::type
-    cm_subb(T minuend, T subtrahend, T &borrow) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA details::add_carry_t<T>
+cm_subb(T minuend, T subtrahend, T &borrow) {
   auto Result = __spirv_ISubBorrow(minuend, subtrahend);
   borrow = Result.C;
   return Result.Res;
 }
 
 template <typename T, int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
-cm_subb(vector<T, SZ> minuend, T subtrahend, vector_ref<T, SZ> borrow) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<details::add_carry_t<T>, SZ>
+cm_subb(vector<T, SZ> minuend, details::make_unsigned_t<T> subtrahend,
+        vector_ref<T, SZ> borrow) {
   vector<T, SZ> Subtrahend = subtrahend;
   return cm_subb(minuend, Subtrahend, borrow);
 }
 
 template <typename T, int SZ>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<T, SZ>
-cm_subb(T minuend, vector<T, SZ> subtrahend, vector_ref<T, SZ> borrow) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA vector<details::add_carry_t<T>, SZ>
+cm_subb(details::make_unsigned_t<T> minuend, vector<T, SZ> subtrahend,
+        vector_ref<T, SZ> borrow) {
   vector<T, SZ> Minuend = minuend;
   return cm_subb(Minuend, subtrahend, borrow);
 }
 
 template <typename T, int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<details::add_carry_t<T>, N1, N2>
 cm_subb(matrix<T, N1, N2> minuend, matrix<T, N1, N2> subtrahend,
         matrix_ref<T, N1, N2> borrow) {
   vector<T, N1 *N2> Minuend = minuend;
@@ -202,15 +217,17 @@ cm_subb(matrix<T, N1, N2> minuend, matrix<T, N1, N2> subtrahend,
 }
 
 template <typename T, int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
-cm_subb(T minuend, matrix<T, N1, N2> subtrahend, matrix_ref<T, N1, N2> borrow) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<details::add_carry_t<T>, N1, N2>
+cm_subb(details::make_unsigned_t<T> minuend, matrix<T, N1, N2> subtrahend,
+        matrix_ref<T, N1, N2> borrow) {
   matrix<T, N1, N2> Minuend = minuend;
   return cm_subb(Minuend, subtrahend, borrow);
 }
 
 template <typename T, int N1, int N2>
-CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<T, N1, N2>
-cm_subb(matrix<T, N1, N2> minuend, T subtrahend, matrix_ref<T, N1, N2> borrow) {
+CM_NODEBUG __SPIRV_WRITER_INLINE_WA matrix<details::add_carry_t<T>, N1, N2>
+cm_subb(matrix<T, N1, N2> minuend, details::make_unsigned_t<T> subtrahend,
+        matrix_ref<T, N1, N2> borrow) {
   matrix<T, N1, N2> Subtrahend = subtrahend;
   return cm_subb(minuend, Subtrahend, borrow);
 }
