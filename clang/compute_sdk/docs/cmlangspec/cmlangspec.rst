@@ -6972,7 +6972,226 @@ Write N 4-element vectors, say {R,G,B,A}, where each element is of
 size dword and is also referred to as a channel, from 'v_Src' into
 shared virtual memory. 'v_Src' must be aligned.
 
-4.19 Preprocessor Directives
+4.19 Xe Matrix Extension (XMX) Functions
+----------------------------------------
+
+C for Metal defines a set of builtin functions that are used to perform matrix
+multiplication operations on Xe architecture.
+
+The common matrix multiplication operations perform the following operations:
+
+.. math::
+
+  D_{M \times N} = A_{M \times K} \times B_{K \times N} + C_{M \times N}
+
+
+The matrix parameters are defined as follows:
+
+* M - number of rows in matrix A, C and D.
+* N - number of columns in matrix B, C and D.
+* K - number of columns in matrix A and rows in matrix B.
+
+The matrix multiplication operations support the following data types,
+represented by enum values and passed as template parameters:
+
+* ``CM_PRECISION_U2`` - 2-bit unsigned integer.
+* ``CM_PRECISION_S2`` - 2-bit signed integer.
+* ``CM_PRECISION_U4`` - 4-bit unsigned integer.
+* ``CM_PRECISION_S4`` - 4-bit signed integer.
+* ``CM_PRECISION_U8`` - 8-bit unsigned integer.
+* ``CM_PRECISION_S8`` - 8-bit signed integer.
+* ``CM_PRECISION_BF`` - 16-bit floating point in bfloat16 format.
+* ``CM_PRECISION_HF`` - 16-bit floating point in IEEE-754 binary16 format.
+* ``CM_PRECISION_TF32`` - TensorFloat32 (TF32) format.
+
+
+All the XMX functions depend on the ``ExecSize`` implicit parameter, which
+is equal to the matrix multiplication *N* dimension, i.e. the number of
+columns in B, C and D matrices. The ``ExecSize`` parameter is calculated as
+the register width divided by the size of the elements in the result
+matrix D.
+
+All the Xe matrix extension functions take the following parameters:
+
+=============== ===============================================================
+Parameter       Description
+=============== ===============================================================
+Src1Precision   Precision of the elements in matrix B, passed as Src1.
+                Must be one of the ``CM_PRECISION_*`` enum values.
+
+Src2Precision   Precision of the elements in matrix A, passed as Src2.
+                Must be one of the ``CM_PRECISION_*`` enum values.
+
+SystolicDepth   Systolic depth of the matrix multiplication operation.
+                The systolic depth is used to calculate the matrix
+                multiplication *K* dimension. The *K* dimension is
+                calculated as the product of the systolic depth and
+                the number of operations per channel.
+
+                The *K* dimension is equal to the number of columns in
+                matrix A and the number of rows in matrix B.
+
+                The systolic depth must be equal to 8 for all the XMX
+                functions.
+
+RepeatCount     The matrix multiplication *M* dimension, i.e. the number of
+                rows in A, C and D matrices.
+
+ResTy           The type of the elements in the result matrix D.
+
+AccTy           The type of the elements in the matrix C.
+
+Src1Ty          The storage type for the elements in matrix B. The matrix B
+                is stored in a vector of this type. The matrix elements are
+                VNNI-packed in the vector.
+
+                The ``Src1Ty`` parameter must be ``int`` or ``uint``.
+
+
+Src2Ty          The storage type for the elements in matrix A. The matrix A
+                is stored in a vector of this type. The matrix elements are
+                present in the row-major order in the vector.
+
+                The ``Src2Ty`` parameter must be ``int`` or ``uint``.
+
+
+AccSize         The number of elements in the C and D matrices. The number
+                of elements in the C and D matrices is equal to the product
+                of the matrix dimensions *M* and *N*.
+
+Src1Size        The number of elements in the ``Src1`` argument, derived
+                from the number of matrix B elements. The number of elements
+                in the matrix B is equal to the product of the matrix
+                dimensions *K* and *N*.
+
+                The ``Src1Size`` parameter must be equal to
+                :math:`\frac{\text{SystolicDepth} \times \text{Src1PrecisionBits} \times \text{OpsPerChannel}}{32} \times \text{ExecSize}`.
+
+
+Src2Size        The number of elements in the ``Src2`` argument, derived
+                from the number of matrix A elements. The number of elements
+                in the matrix A is equal to the product of the matrix
+                dimensions *M* and *K*.
+
+                The ``Src1Size`` parameter must be equal to
+                :math:`\text{RepeatCount} \times \frac{\text{SystolicDepth} \times \text{Src2PrecisionBits} \times \text{OpsPerChannel}}{32}`.
+
+
+Acc             The matrix C, which is the accumulator matrix. It's represented
+                as a vector of ``AccSize`` elements of type ``AccTy`` in
+                row-major order.
+
+Src1            The matrix B, which is the source matrix. It's represented as
+                a vector of ``Src1Size`` elements of type ``Src1Ty`` in VNNI-
+                packed format.
+
+Src2            The matrix A, which is the source matrix. It's represented as
+                a vector of ``Src2Size`` elements of type ``Src2Ty`` in row-
+                major order.
+=============== ===============================================================
+
+The XMX functions support only limited combinations of the matrix precision
+types. The following table lists the supported combinations. Some targets may
+not support all the combinations. The supported combinations are indicated by
+the macros defined in the table.
+
+===================== ================== ============= ========================
+``ResTy``, ``AccTy``  Source precision   OpsPerChannel Macros
+===================== ================== ============= ========================
+``int``               CM_PRECISION_U2,         8       ``CM_HAS_DPAS_INT2``
+                      CM_PRECISION_S2
+
+``int``               CM_PRECISION_U4,         8       ``CM_HAS_DPAS_INT4``
+                      CM_PRECISION_S4
+
+``int``               CM_PRECISION_U8,         4       ``CM_HAS_DPAS_INT8``
+                      CM_PRECISION_S8
+
+``int``               CM_PRECISION_U\*,      4 or 8    ``CM_HAS_DPAS_INT_MIX``
+                      CM_PRECISION_S\*
+
+``float``             CM_PRECISION_BF          2       ``CM_HAS_DPAS``
+
+``float``, ``bfloat`` CM_PRECISION_BF          2       ``CM_HAS_DPAS_ACC_BF16``
+
+``float``             CM_PRECISION_HF          2       ``CM_HAS_DPAS``
+
+``float``, ``half``   CM_PRECISION_HF          2       ``CM_HAS_DPAS_ACC_HALF``
+
+``float``             CM_PRECISION_TF32        1       ``CM_HAS_TF32``
+===================== ================== ============= ========================
+
+
+cm_dpas (gen12+)
+^^^^^^^^^^^^^^^^
+
+Dot Product Accumulate Systolic (DPAS) operation is a matrix multiplication
+operation that supports the following interface:
+
+.. code-block:: c++
+
+  template <CmPrecisionType Src1Precision, CmPrecisionType Src2Precision,
+            int SystolicDepth, int RepeatCount, typename ResTy>
+  vector<ResTy, AccSize> cm_dpas(vector<AccTy, AccSize> Acc,
+                                 vector<Src1Ty, Src1Size> Src1,
+                                 vector<Src2Ty, Src2Size> Src2);
+
+  template <CmPrecisionType Src1Precision, CmPrecisionType Src2Precision,
+            int SystolicDepth, int RepeatCount>
+  vector<AccTy, AccSize> cm_dpas(vector<AccTy, AccSize> Acc,
+                                 vector<Src1Ty, Src1Size> Src1,
+                                 vector<Src2Ty, Src2Size> Src2);
+
+  template <CmPrecisionType Src1Precision, CmPrecisionType Src2Precision,
+            int SystolicDepth, int RepeatCount, typename ResTy>
+  vector<ResTy, AccSize> cm_dpas(int, // dummy parameter, must be NULL
+                                 vector<Src1Ty, Src1Size> Src1,
+                                 vector<Src2Ty, Src2Size> Src2);
+
+The following restrictions are applied to the functions:
+* RepeatCount must be from 1 to 8.
+
+These functions are target-dependent and only available when the ``CM_HAS_DPAS``
+macro is defined.
+
+cm_dpasw
+^^^^^^^^
+
+Dot Product Accumulate Systolic Wide (DPASW) operation is a matrix multiplication
+operation that supports the following interface:
+
+.. code-block:: c++
+
+  template <CmPrecisionType Src1Ty, CmPrecisionType Src2Ty, int SystolicDepth,
+            int RepeatCount>
+  vector<AccTy, AccSize> cm_dpasw(vector<AccTy, AccSize> Acc,
+                                  vector<T1, Src1Size> Src1,
+                                  vector<T2, Src2Size> Src2);
+
+  template <CmPrecisionType Src1Ty, CmPrecisionType Src2Ty, int SystolicDepth,
+            int RepeatCount, typename AccTy, typename T1, typename T2,
+            int AccSize>
+  vector<AccTy, AccSize> cm_dpasw(int Dummy, // dummy parameter, must be NULL
+                                  vector<T1, Src1Size> Src1,
+                                  vector<T2, Src2Size> Src2);
+
+The following restrictions are applied to the functions:
+* RepeatCount must be from 1 to 8.
+* Only the integer and 16-bit floating point formats are supported.
+
+These functions are target-dependent and only available when the ``CM_HAS_DPASW``
+macro is defined.
+
+cm_dpasw performs similar operation as cm_dpas, with source2 shared by
+two fused EU threads, therefore the size of source2 is reduced by half.
+
+cm_dpasw should not be used in partially fused thread groups (e.g., with odd
+thread group size) or in divergent code. In such cases the behavior is undefined.
+
+
+
+
+4.20 Preprocessor Directives
 ----------------------------
 
 Currently C for Metal supports the following preprocessor directives (pragmas):
@@ -6989,7 +7208,7 @@ for n times. The C for Metal compiler may still not unroll the loop if infeasibl
 This pragma may be specified immediately before a loop to instruct the C for Metal compiler to completely
 unroll a loop. The C for Metal compiler may not unroll the loop if infeasible.
 
-4.20 Rounding mode and float control support
+4.21 Rounding mode and float control support
 --------------------------------------------
 
 C for Metal supports setting of floating point rounding mode and other floating point control on a per-kernel
@@ -7092,7 +7311,7 @@ Mixed control examples
   }
 
 
-4.21 Miscellaneous Functions
+4.22 Miscellaneous Functions
 ----------------------------
 
 cm_get_hwid
