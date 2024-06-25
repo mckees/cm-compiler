@@ -19,7 +19,7 @@ enum scope {
   device = 1,
   workgroup = 2,
   subgroup = 3,
-  invocation = 4
+  invocation = 4,
 };
 } // namespace spirv
 } // namespace detail
