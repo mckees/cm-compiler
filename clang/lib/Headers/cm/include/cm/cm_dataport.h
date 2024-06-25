@@ -955,6 +955,14 @@ CM_INLINE CM_NODEBUG void cm_barrier() {
   __spirv_ControlBarrier(detail::spirv::scope::workgroup, 0, 0);
 }
 
+/// \brief CM barrier cross-workgroup synchronization
+///
+/// Inserts a barrier to synchronize all work-items executing the kernel.
+///
+CM_INLINE CM_NODEBUG void cm_global_barrier() {
+  __spirv_ControlBarrier(detail::spirv::scope::device, 0, 0);
+}
+
 /// \brief CM split barrier workgroup synchronization
 ///
 /// Inserts a barrier to ensure all writes to SLM before this point would be

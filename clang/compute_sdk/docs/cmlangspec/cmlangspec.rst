@@ -3542,6 +3542,17 @@ Inserts a barrier to ensure all writes to SLM before this point
 would be henceforth visible to other threads in the same
 group.
 
+cm_global_barrier
+"""""""""""""""""
+
+.. code-block:: c++
+
+  void cm_global_barrier (void);
+
+Inserts a barrier to synchronize all work-items executing the
+kernel. The barrier should only be used in cooperative kernels,
+otherwise behavior is undefined.
+
 cm_sbarrier
 """""""""""
 
