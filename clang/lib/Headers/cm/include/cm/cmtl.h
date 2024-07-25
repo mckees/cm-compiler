@@ -29,16 +29,6 @@ SPDX-License-Identifier: MIT
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcm-bounds-check"
 
-// Debug support
-#ifdef CMRT_EMU
-CM_INLINE void  cm_assert(bool x)
-{
-    assert(x);
-}
-#else
-#define cm_assert(x)
-#endif
-
 // All the CM template library (cmtl) is enclosed in the cmtl namespace
 namespace cmtl {
 /* ---------------------------------------------------------------------------*/

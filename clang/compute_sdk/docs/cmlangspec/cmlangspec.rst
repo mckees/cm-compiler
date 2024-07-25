@@ -7341,6 +7341,24 @@ cm_get_tileid
 
 This intrinsic can be used to access the device tile id.
 
+cm_assert
+^^^^^^^^^
+
+.. code-block:: c++
+
+  #define cm_assert(condition) /* unspecified */
+
+The definition of the ``cm_assert`` macro depends on another macro, ``CM_ENABLE_ASSERTS``.
+
+If ``CM_ENABLE_ASSERTS`` is **not** defined as a macro name at the point in the
+source code where the ``cm/cm.h`` header is included, the ``cm_assert`` does nothing.
+
+Otherwise, the assertion is enabled. The ``cm_assert`` checks if its argument
+(which must have scalar type) compares equal to zero. If it does, the assertion
+outputs implementation-specific diagnostic information and terminates the kernel
+execution.
+
+Note: the assertions are only supported, when the kernel is invoked by the Level Zero runtime.
 
 .. _CMInlineAssembly:
 

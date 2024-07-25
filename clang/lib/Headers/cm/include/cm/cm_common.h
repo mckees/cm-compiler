@@ -555,6 +555,24 @@ enum CmFloatControl {
 // cm_label() is deprecated
 #define cm_label(...) CM_STATIC_WARNING(0, "cm_label() is deprecated")
 
+#if defined(CM_ENABLE_ASSERTS)
+extern "C" [[noreturn]] void
+__devicelib_assert_fail(const char *Expr, const char *File, uint32_t Line,
+                        const char *Function, uint64_t GroupX, uint64_t GroupY,
+                        uint64_t GroupZ, uint64_t LocalX, uint64_t LocalY,
+                        uint64_t LocalZ);
+
+#define cm_assert(C)                                                           \
+  do {                                                                         \
+    if ((C) == 0)                                                              \
+      __devicelib_assert_fail(#C, __FILE__, __LINE__, __PRETTY_FUNCTION__,     \
+                              cm_group_id(0), cm_group_id(1), cm_group_id(2),  \
+                              cm_local_id(0), cm_local_id(1), cm_local_id(2)); \
+  } while (0)
+#else // defined(CM_ENABLE_ASSERTS)
+#define cm_assert(C) ((void)0)
+#endif // defined(CM_ENABLE_ASSERTS)
+
 // L1 or L3 cache hint kinds.
 enum class CacheHint : uint8_t {
   Default = 0,
